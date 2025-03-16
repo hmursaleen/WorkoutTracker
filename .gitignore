@@ -1,0 +1,51 @@
+# Standard Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.py,cover
+*.egg-info/
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/
+dist/
+build/
+venv/
+env/
+.venv/
+ENV/
+
+# Django
+db.sqlite3
+media/
+staticfiles/
+
+# Environment files
+.env
+*.env
+.env.local
+.env.*.local
+secrets.yml
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Docker
+docker-compose.override.yml
+data/
+volumes/
+
+# Logs
+*.log
+logs/
+
+# Local development
+.local/
+settings/local.py
+
+# Misc
+.DS_Store
