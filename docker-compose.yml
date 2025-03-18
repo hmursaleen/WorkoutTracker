@@ -1,5 +1,5 @@
 version: '3.8'
-
+#which version to use, decide later
 services:
   db:
     image: postgres:15.3-alpine  # Pinned version for stability
