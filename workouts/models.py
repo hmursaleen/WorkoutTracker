@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-#from exercises.models import Exercise #i'll write it later.
+from exercises.models import Exercise
 
 class WorkoutPlan(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='workouts')
@@ -15,7 +15,7 @@ class WorkoutPlan(models.Model):
 
 class WorkoutExercise(models.Model):
     workout = models.ForeignKey(WorkoutPlan, on_delete=models.CASCADE, related_name='exercises')
-    #exercise = models.ForeignKey(Exercise, on_delete=models.CASCADE)
+    exercise = models.ForeignKey(Exercise, on_delete=models.CASCADE)
     sets = models.PositiveIntegerField()
     reps = models.PositiveIntegerField()
     weight = models.FloatField(blank=True, null=True)
