@@ -22,3 +22,16 @@ class WorkoutExercise(models.Model):
 
     def __str__(self):
         return f"{self.exercise.name} in {self.workout.title}"
+
+
+
+
+
+class ScheduledWorkout(models.Model):#this model links a workout plan to a specific scheduled date/time.
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='scheduled_workouts')
+    workout = models.ForeignKey(WorkoutPlan, on_delete=models.CASCADE, related_name='schedules')
+    scheduled_datetime = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.workout.title} scheduled for {self.scheduled_datetime}"

@@ -1,8 +1,10 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
-from .models import WorkoutPlan
-from .serializers import WorkoutPlanSerializer
+from .models import ScheduledWorkout, WorkoutPlan
+from .serializers import WorkoutPlanSerializer, ScheduledWorkoutSerializer
+
+
 
 class WorkoutPlanListCreateAPIView(APIView):
     """
@@ -24,6 +26,9 @@ class WorkoutPlanListCreateAPIView(APIView):
             serializer.save(user=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
 
 
 class WorkoutPlanDetailAPIView(APIView):
@@ -64,4 +69,79 @@ class WorkoutPlanDetailAPIView(APIView):
         if workout is None:
             return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
         workout.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+
+
+
+class ScheduledWorkoutListCreateAPIView(APIView):
+    """
+    API view to list all scheduled workouts for the authenticated user,
+    and to create a new scheduled workout.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        # Return only the scheduled workouts for the current user, ordered by scheduled_datetime.
+        schedules = ScheduledWorkout.objects.filter(user=request.user).order_by('scheduled_datetime')
+        serializer = ScheduledWorkoutSerializer(schedules, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        serializer = ScheduledWorkoutSerializer(data=request.data)
+        if serializer.is_valid():
+            # Verify that the workout belongs to the authenticated user.
+            workout = serializer.validated_data.get('workout')
+            if workout.user != request.user:
+                return Response({"detail": "You cannot schedule a workout that doesn't belong to you."}, status=status.HTTP_403_FORBIDDEN)
+            serializer.save(user=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+
+class ScheduledWorkoutDetailAPIView(APIView):
+    """
+    API view to retrieve, update, or delete a specific scheduled workout.
+    Only the owner of the schedule can access or modify it.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self, pk, request):
+        try:
+            schedule = ScheduledWorkout.objects.get(pk=pk)
+        except ScheduledWorkout.DoesNotExist:
+            return None
+        if schedule.user != request.user:
+            return None
+        return schedule
+
+    def get(self, request, pk):
+        schedule = self.get_object(pk, request)
+        if schedule is None:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        serializer = ScheduledWorkoutSerializer(schedule)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def put(self, request, pk):
+        schedule = self.get_object(pk, request)
+        if schedule is None:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        serializer = ScheduledWorkoutSerializer(schedule, data=request.data)
+        if serializer.is_valid():
+            workout = serializer.validated_data.get('workout')
+            if workout.user != request.user:
+                return Response({"detail": "You cannot schedule a workout that doesn't belong to you."}, status=status.HTTP_403_FORBIDDEN)
+            serializer.save(user=request.user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        schedule = self.get_object(pk, request)
+        if schedule is None:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        schedule.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)

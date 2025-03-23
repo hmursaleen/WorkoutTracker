@@ -1,10 +1,16 @@
 from rest_framework import serializers
-from .models import WorkoutPlan, WorkoutExercise
+from .models import WorkoutPlan, WorkoutExercise, ScheduledWorkout
+
+
 
 class WorkoutExerciseSerializer(serializers.ModelSerializer):
     class Meta:
         model = WorkoutExercise
         fields = ['id', 'exercise', 'sets', 'reps', 'weight']
+
+
+
+
 
 class WorkoutPlanSerializer(serializers.ModelSerializer):
     exercises = WorkoutExerciseSerializer(many=True)
@@ -34,3 +40,13 @@ class WorkoutPlanSerializer(serializers.ModelSerializer):
             for exercise_data in exercises_data:
                 WorkoutExercise.objects.create(workout=instance, **exercise_data)
         return instance
+
+
+
+
+
+class ScheduledWorkoutSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ScheduledWorkout
+        fields = ['id', 'workout', 'scheduled_datetime', 'created_at']
+        read_only_fields = ['created_at']
