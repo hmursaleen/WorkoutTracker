@@ -49,3 +49,5 @@ settings/local.py
 
 # Misc
 .DS_Store
+
+migrations/

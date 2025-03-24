@@ -1,11 +1,11 @@
 from rest_framework import serializers
-from .models import WorkoutPlan, WorkoutExercise, ScheduledWorkout
+from . import models
 
 
 
 class WorkoutExerciseSerializer(serializers.ModelSerializer):
     class Meta:
-        model = WorkoutExercise
+        model = models.WorkoutExercise
         fields = ['id', 'exercise', 'sets', 'reps', 'weight']
 
 
@@ -16,7 +16,7 @@ class WorkoutPlanSerializer(serializers.ModelSerializer):
     exercises = WorkoutExerciseSerializer(many=True)
 
     class Meta:
-        model = WorkoutPlan
+        model = models.WorkoutPlan
         fields = ['id', 'title', 'description', 'scheduled_date', 'exercises', 'created_at', 'updated_at']
         read_only_fields = ['created_at', 'updated_at']
 
@@ -47,6 +47,29 @@ class WorkoutPlanSerializer(serializers.ModelSerializer):
 
 class ScheduledWorkoutSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ScheduledWorkout
+        model = models.ScheduledWorkout
         fields = ['id', 'workout', 'scheduled_datetime', 'created_at']
         read_only_fields = ['created_at']
+
+
+
+
+
+
+class WorkoutCommentSerializer(serializers.ModelSerializer):
+    user = serializers.StringRelatedField(read_only=True)  #Returns the username
+
+    class Meta:
+        model = models.WorkoutComment
+        fields = ['id', 'workout', 'user', 'comment', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'user', 'created_at', 'updated_at']
+
+
+
+class WorkoutPerformanceSerializer(serializers.ModelSerializer):
+    user = serializers.StringRelatedField(read_only=True)  #Returns the username
+
+    class Meta:
+        model = models.WorkoutPerformance
+        fields = ['id', 'workout', 'user', 'performance_metric', 'notes', 'performed_at']
+        read_only_fields = ['id', 'user', 'performed_at']

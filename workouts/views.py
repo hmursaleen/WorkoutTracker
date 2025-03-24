@@ -145,3 +145,159 @@ class ScheduledWorkoutDetailAPIView(APIView):
             return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
         schedule.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+
+
+
+class ScheduledWorkoutListSortedAPIView(APIView):
+    """
+    API view to list all scheduled workouts for the authenticated user,
+    sorted by the scheduled date/time.
+    
+    Optional Query Parameter:
+        - order: 'asc' (default) for ascending, 'desc' for descending order.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        order = request.query_params.get('order', 'asc').lower()
+        if order == 'desc':
+            schedules = ScheduledWorkout.objects.filter(user=request.user).order_by('-scheduled_datetime')
+        else:
+            schedules = ScheduledWorkout.objects.filter(user=request.user).order_by('scheduled_datetime')
+        serializer = ScheduledWorkoutSerializer(schedules, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
+
+
+
+class WorkoutCommentListCreateAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        workout_id = request.query_params.get('workout')
+        if workout_id:
+            comments = WorkoutComment.objects.filter(user=request.user, workout_id=workout_id)
+        else:
+            comments = WorkoutComment.objects.filter(user=request.user)
+        serializer = WorkoutCommentSerializer(comments, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        serializer = WorkoutCommentSerializer(data=request.data)
+        if serializer.is_valid():
+            workout = serializer.validated_data.get('workout')
+            if workout.user != request.user:
+                return Response({"detail": "You cannot comment on a workout that is not yours."}, status=status.HTTP_403_FORBIDDEN)
+            serializer.save(user=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+
+class WorkoutCommentDetailAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self, pk, request):
+        try:
+            comment = WorkoutComment.objects.get(pk=pk)
+        except WorkoutComment.DoesNotExist:
+            return None
+        if comment.user != request.user:
+            return None
+        return comment
+
+    def get(self, request, pk):
+        comment = self.get_object(pk, request)
+        if comment is None:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        serializer = WorkoutCommentSerializer(comment)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def put(self, request, pk):
+        comment = self.get_object(pk, request)
+        if comment is None:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        serializer = WorkoutCommentSerializer(comment, data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=request.user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        comment = self.get_object(pk, request)
+        if comment is None:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        comment.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+
+
+
+class WorkoutPerformanceListCreateAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        workout_id = request.query_params.get('workout')
+        if workout_id:
+            performances = WorkoutPerformance.objects.filter(user=request.user, workout_id=workout_id)
+        else:
+            performances = WorkoutPerformance.objects.filter(user=request.user)
+        serializer = WorkoutPerformanceSerializer(performances, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        serializer = WorkoutPerformanceSerializer(data=request.data)
+        if serializer.is_valid():
+            workout = serializer.validated_data.get('workout')
+            if workout.user != request.user:
+                return Response({"detail": "You cannot log performance for a workout that is not yours."}, status=status.HTTP_403_FORBIDDEN)
+            serializer.save(user=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+
+class WorkoutPerformanceDetailAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self, pk, request):
+        try:
+            performance = WorkoutPerformance.objects.get(pk=pk)
+        except WorkoutPerformance.DoesNotExist:
+            return None
+        if performance.user != request.user:
+            return None
+        return performance
+
+    def get(self, request, pk):
+        performance = self.get_object(pk, request)
+        if performance is None:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        serializer = WorkoutPerformanceSerializer(performance)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def put(self, request, pk):
+        performance = self.get_object(pk, request)
+        if performance is None:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        serializer = WorkoutPerformanceSerializer(performance, data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=request.user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        performance = self.get_object(pk, request)
+        if performance is None:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        performance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
