@@ -1,8 +1,10 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
-from .models import ScheduledWorkout, WorkoutPlan
+from .models import ScheduledWorkout, WorkoutPlan, WorkoutPerformance
 from .serializers import WorkoutPlanSerializer, ScheduledWorkoutSerializer
+from django.db.models import Count, Avg
+from django.db.models.functions import TruncMonth
 
 
 
@@ -301,3 +303,55 @@ class WorkoutPerformanceDetailAPIView(APIView):
             return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
         performance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+
+
+
+class WorkoutReportAPIView(APIView):
+    '''
+    API view to generate reports on past workouts.
+    
+    Query Parameter:
+        - report_type: "frequency" (default) for count of workouts per month,
+                       "progress" for average performance metric per month.
+    '''
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        report_type = request.query_params.get('report_type', 'frequency').lower()
+        
+        if report_type == 'frequency':
+            #frequency report: count of workouts created per month.
+            qs = WorkoutPlan.objects.filter(user=request.user)
+            qs = qs.annotate(month=TruncMonth('created_at')) \
+                   .values('month') \
+                   .annotate(count=Count('id')) \
+                   .order_by('month')
+            data = [
+                {
+                    'month': item['month'].strftime('%Y-%m'),
+                    'workout_count': item['count']
+                }
+                for item in qs
+            ]
+            return Response({'report_type': 'frequency', 'data': data}, status=status.HTTP_200_OK)
+        
+        elif report_type == 'progress':
+            #progress report: average performance metric logged per month.
+            qs = WorkoutPerformance.objects.filter(user=request.user)
+            qs = qs.annotate(month=TruncMonth('performed_at')) \
+                   .values('month') \
+                   .annotate(avg_performance=Avg('performance_metric')) \
+                   .order_by('month')
+            data = [
+                {
+                    'month': item['month'].strftime('%Y-%m'),
+                    'average_performance': item['avg_performance']
+                }
+                for item in qs
+            ]
+            return Response({'report_type': 'progress', 'data': data}, status=status.HTTP_200_OK)
+        
+        else:
+            return Response({'detail': 'Invalid report type.'}, status=status.HTTP_400_BAD_REQUEST)

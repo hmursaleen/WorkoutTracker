@@ -14,4 +14,6 @@ urlpatterns = [
 
     path('workout_performances/', views.WorkoutPerformanceListCreateAPIView.as_view(), name='workout_performance_list_create'),
     path('workout_performances/<int:pk>/', views.WorkoutPerformanceDetailAPIView.as_view(), name='workout_performance_detail'),
+
+    path('reports/workouts/', views.WorkoutReportAPIView.as_view(), name='workout_report'),
 ]
