@@ -236,7 +236,7 @@ class WorkoutCommentDetailAPIView(APIView):
         if comment is None:
             return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
         comment.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        #return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 
